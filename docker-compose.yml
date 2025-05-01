@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  embeddings_app:
+    build: .
+    volumes:
+      - ./data:/data  # Volume persistente
+      - ./app:/app    # Para desenvolvimento
+    environment:
+      - PYTHONUNBUFFERED=1
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+
+  # Opcional: Adicione um serviço de banco de dados se precisar
+  duckdb:
+    image: duckdb/duckdb
+    volumes:
+      - ./data:/data
+    restart: unless-stopped

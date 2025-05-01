@@ -1,0 +1,67 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+/instance/
+*.egg-info
+
+# Streamlit
+.streamlit/cache/
+.streamlit/secrets.toml
+
+# Data
+*.csv
+*.txt
+*.json
+*.parquet
+*.npy
+*.pkl
+app_duckdb/  # Se você não quer versionar o banco de dados DuckDB
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temp files
+*.tmp
+temp/
+tmp/
+
+# IDEs and Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+.project
+.history
+.cache
+*.bak
+
+# Secrets
+.env
+secrets.toml  # Se você não usar o padrão do Streamlit
+
+# Dependencies
+# /requirements.txt  # Normalmente você *versiona* este
+# /environment.yml   # e este, mas se gerar, ignore
+/conda-meta/
+
+# Large Files (Optional - use with caution!)
+# *.model
+# *.bin
+# *.data
+
+# Ignore files that might contain sensitive information
+# config.py
+# credentials.py
+
+# DuckDB
+*.duckdb
+*.wal
