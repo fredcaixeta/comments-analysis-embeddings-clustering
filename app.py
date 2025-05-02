@@ -217,8 +217,15 @@ st.plotly_chart(fig, use_container_width=True)
 
 # 3. Busca por similaridade
 st.header("🔎 Buscar Comentários Similares")
-search_term = st.text_input("Digite uma frase para encontrar comentários similares:", 
-                           "Gostei muito do conteúdo!")
+search_term = st.text_input("Digite uma frase para encontrar comentários similares:")
+
+num_results = st.number_input(
+    "Número de comentários similares a mostrar:",
+    min_value=1,
+    max_value=10,
+    value=3,  # Valor padrão definido como 3
+    help="Selecione quantos comentários similares você deseja visualizar"
+)
 
 @st.cache_data(ttl=36000, show_spinner="Calculando similaridades...")  # Cache por 1 hora
 def process_search(_search_term, _embeddings_array, _pca, _cluster_labels, _all_comments):
@@ -232,16 +239,8 @@ def process_search(_search_term, _embeddings_array, _pca, _cluster_labels, _all_
     # 3. Calcula similaridades
     similarities = cosine_similarity(search_embedding, _embeddings_array)[0]
     
-    # 4. Obtém os índices dos mais similares
-    top_indices = np.argsort(similarities)[-5:][::-1]
-    
-    # 5. Prepara dados para visualização
-    search_point = _pca.transform(search_embedding)[0]
-    
     return {
-        'top_indices': top_indices,
         'similarities': similarities,
-        'search_point': search_point,
         'search_embedding': search_embedding
     }
     
@@ -251,17 +250,23 @@ if st.button("Buscar") and search_term:
             # Processa a busca (usando cache)
             results = process_search(search_term, embeddings_array, pca, cluster_labels, all_comments)
             
+            # Obtém os índices dos N mais similares (agora usando num_results)
+            top_indices = np.argsort(results['similarities'])[-num_results:][::-1]
+            
+            # Transformação PCA para o ponto de busca
+            search_point = pca.transform(results['search_embedding'])[0]
+            
             # 6. Mostra resultados
-            st.subheader("Comentários mais similares:")
-            for idx in results['top_indices']:
+            st.subheader(f"Top {num_results} comentários mais similares:")
+            for idx in top_indices:
                 with st.expander(f"Similaridade: {results['similarities'][idx]:.3f} (Cluster {cluster_labels[idx]})"):
                     st.write(all_comments[idx])
                     st.progress(float(results['similarities'][idx]))
                     
             # 7. Adiciona ponto da busca na visualização
             fig.add_trace(px.scatter(
-                x=[results['search_point'][0]],
-                y=[results['search_point'][1]], 
+                x=[search_point[0]],
+                y=[search_point[1]], 
                 color_discrete_sequence=['red'],
                 symbol=['Busca'],
                 size=[10]
