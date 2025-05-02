@@ -227,8 +227,8 @@ num_results = st.number_input(
     help="Selecione quantos comentários similares você deseja visualizar"
 )
 
-@st.cache_data(ttl=36000, show_spinner="Calculando similaridades...")  # Cache por 1 hora
-def process_search(_search_term, _embeddings_array, _pca, _cluster_labels, _all_comments):
+#@st.cache_data(ttl=36000, show_spinner="Calculando similaridades...", hash_funcs={str: lambda _: None})
+def process_search(_search_term, _embeddings_array, pca, cluster_labels, all_comments):
     """Processa a busca com cache para evitar chamadas repetidas à API"""
     # 1. Gera embedding para a busca
     search_embedding = create_embeddings([_search_term])
@@ -241,36 +241,66 @@ def process_search(_search_term, _embeddings_array, _pca, _cluster_labels, _all_
     
     return {
         'similarities': similarities,
-        'search_embedding': search_embedding
+        'search_embedding': search_embedding,
+        'search_term': _search_term
     }
+    # ... (código anterior permanece igual)
+
+if st.button("Buscar"):
+    if not search_term:
+        st.warning("Por favor, digite um termo para buscar")
+        st.stop()
     
-if st.button("Buscar") and search_term:
     with st.spinner("Procurando comentários similares..."):
         try:
-            # Processa a busca (usando cache)
+            # Processa a busca
             results = process_search(search_term, embeddings_array, pca, cluster_labels, all_comments)
             
-            # Obtém os índices dos N mais similares (agora usando num_results)
+            # Obtém os N mais similares BASEADO NO ESPAÇO ORIGINAL
             top_indices = np.argsort(results['similarities'])[-num_results:][::-1]
             
-            # Transformação PCA para o ponto de busca
-            search_point = pca.transform(results['search_embedding'])[0]
+            # 1. Cálculo de posições CONSISTENTES
+            search_point = results['search_embedding'] @ pca.components_.T  # Projeção PCA usando os mesmos componentes
+            top_points = embeddings_array[top_indices] @ pca.components_.T  # Projeção dos melhores resultados
             
-            # 6. Mostra resultados
-            st.subheader(f"Top {num_results} comentários mais similares:")
+            # 2. Criação do gráfico ATUALIZADO
+            fig = px.scatter(
+                plot_df, 
+                x='x', 
+                y='y', 
+                color='cluster',
+                hover_data=['comment'],
+                title=f'Top {num_results} comentários mais similares a: "{search_term[:30]}..."'
+            )
+            
+            # 3. Adiciona pontos de forma PRECISA
+            fig.add_scatter(
+                x=[search_point[0,0]],
+                y=[search_point[0,1]],
+                mode='markers',
+                marker=dict(color='red', size=12, symbol='x'),
+                name='Sua Busca',
+                hoverinfo='text',
+                hovertext=[f"Busca: {search_term}"]
+            )
+            
+            # 4. Destaca os pontos selecionados
+            fig.add_scatter(
+                x=top_points[:,0],
+                y=top_points[:,1],
+                mode='markers',
+                marker=dict(color='limegreen', size=10, symbol='circle-open'),
+                name='Resultados',
+                hovertext=[f"Similaridade: {results['similarities'][i]:.2f}" for i in top_indices]
+            )
+            
+            # Mostra resultados
+            st.subheader(f"Resultados para: '{search_term}'")
             for idx in top_indices:
                 with st.expander(f"Similaridade: {results['similarities'][idx]:.3f} (Cluster {cluster_labels[idx]})"):
                     st.write(all_comments[idx])
                     st.progress(float(results['similarities'][idx]))
-                    
-            # 7. Adiciona ponto da busca na visualização
-            fig.add_trace(px.scatter(
-                x=[search_point[0]],
-                y=[search_point[1]], 
-                color_discrete_sequence=['red'],
-                symbol=['Busca'],
-                size=[10]
-            ).data[0])
+            
             st.plotly_chart(fig, use_container_width=True)
                 
         except Exception as e:
