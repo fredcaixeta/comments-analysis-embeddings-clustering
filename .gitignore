@@ -65,3 +65,5 @@ secrets.toml  # Se você não usar o padrão do Streamlit
 # DuckDB
 *.duckdb
 *.wal
+
+searching_sql.ipynb
