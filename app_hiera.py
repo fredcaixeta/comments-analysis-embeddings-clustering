@@ -265,39 +265,21 @@ if st.button("Buscar"):
                     """, unsafe_allow_html=True)
                     st.progress(float(similarities[idx]))
                         
-            
 # -----------------------------------------------
-# 2. CLUSTERIZAÇÃO (versão simplificada)
-# # -----------------------------------------------
-# st.header("Clusters")
+# --------------- Clusterização -----------------
+# -----------------------------------------------
 
-# # Dendrograma
-# fig = ff.create_dendrogram(np.array(embeddings_array))
-# fig.update_layout(height=600)
-# st.plotly_chart(fig, use_container_width=True)
+        # st.header("Clusters")
+        # fig = ff.create_dendrogram(embeddings_array)
+        # fig.update_layout(margin=dict(l=0, r=20, t=20, b=20))
+        # st.plotly_chart(fig)
 
-# # Seleção de clusters
-# n_clusters = st.slider('Number of clusters', 2, 20, 5)
+        # number_of_clusters = st.slider('How many clusters?', 2, 20, 5)
 
-# if st.button("Compute Clusters"):
-#     with st.spinner("Clustering..."):
-#         try:
-#             # Clusterização
-#             Z = linkage(np.array(embeddings_array), method='complete', metric='cosine')
-#             labels = fcluster(Z, t=n_clusters, criterion='maxclust')
-            
-#             # Organiza resultados
-#             clusters = {i: [] for i in range(1, n_clusters+1)}
-#             for idx, label in enumerate(labels):
-#                 clusters[label].append(all_comments[idx])
-            
-#             # Exibe clusters
-#             for cluster, comments in clusters.items():
-#                 with st.expander(f"Cluster {cluster} ({len(comments)} comments)"):
-#                     for comment in comments[:5]:  # Mostra até 5 por cluster
-#                         st.write(f"- {comment[:200]}{'...' if len(comment) > 200 else ''}")
-#                     if len(comments) > 5:
-#                         st.write(f"... and {len(comments)-5} more")
-                        
-#         except Exception as e:
-#             st.error(f"Clustering error: {str(e)}")
+        # with st.status("Computing clusters.....", expanded=True):
+        #     clusters = compute_clusters(embeddings=embeddings_array, n_clusters=number_of_clusters)[0].items()
+        #     sorted_clusters = sorted(clusters, key=lambda x: len(x[1]) * -1)
+        #     for cluster, labels in sorted_clusters:
+        #         st.write(f"Cluster: {cluster} ({len(labels)})")
+        #         st.write(labels)
+
